@@ -281,17 +281,42 @@ export default class Backgrounds {
 
 		} );
 
-		// Stop content inside of previous backgrounds
-		if( this.previousBackground ) {
-
-			this.Reveal.slideContent.stopEmbeddedContent( this.previousBackground, { unloadIframes: !this.Reveal.slideContent.shouldPreload( this.previousBackground ) } );
-
-		}
 
 		// Start content in the current background
 		if( currentBackground ) {
+			// console.log("---Videos in current background---")
+			let allVideos = queryAll(currentBackground, 'video');
+			for (const vidEl of allVideos){
+				if(!vidEl.id){
+					vidEl.id = "" + (Math.floor(Math.random() * 100)*Date.now());
+				}
+			}
 
-			this.Reveal.slideContent.startEmbeddedContent( currentBackground );
+			// Don't transition between identical backgrounds. This
+			// prevents unwanted flicker.
+			let previousBackgroundHash = this.previousBackground ? this.previousBackground.getAttribute( 'data-background-hash' ) : null;
+			let currentBackgroundHash = currentBackground.getAttribute( 'data-background-hash' );
+			if( currentBackgroundHash && currentBackgroundHash === previousBackgroundHash && currentBackground !== this.previousBackground ) {
+				this.element.classList.add( 'no-transition' );
+			}
+
+			// Don't restart the video between two slides with same background
+			if(this.previousBackground){
+				const video = currentBackground.querySelector("video");
+				if(video){
+						const previousVideo = this.previousBackground.querySelector("video");
+
+						if(previousVideo) {
+							this.Reveal.slideContent.startEmbeddedContent( currentBackground, previousVideo.currentTime);
+						}
+						else {
+							this.Reveal.slideContent.startEmbeddedContent( currentBackground, 0 );
+						}
+				}
+			} else {
+				this.Reveal.slideContent.startEmbeddedContent( currentBackground, 0 );
+			}
+			// console.log("----------------------------------")
 
 			let currentBackgroundContent = currentBackground.querySelector( '.slide-background-content' );
 			if( currentBackgroundContent ) {
@@ -307,16 +332,18 @@ export default class Backgrounds {
 
 			}
 
-			// Don't transition between identical backgrounds. This
-			// prevents unwanted flicker.
-			let previousBackgroundHash = this.previousBackground ? this.previousBackground.getAttribute( 'data-background-hash' ) : null;
-			let currentBackgroundHash = currentBackground.getAttribute( 'data-background-hash' );
-			if( currentBackgroundHash && currentBackgroundHash === previousBackgroundHash && currentBackground !== this.previousBackground ) {
-				this.element.classList.add( 'no-transition' );
-			}
+		}
 
+		// Stop content inside of previous backgrounds
+		if( this.previousBackground ) {
+			// console.log("---Videos in previous background---");
+			// console.log(queryAll(this.previousBackground, 'video'));
+			this.Reveal.slideContent.stopEmbeddedContent( this.previousBackground, { unloadIframes: !this.Reveal.slideContent.shouldPreload( this.previousBackground ) } );
+
+		}
+
+		if(currentBackground){
 			this.previousBackground = currentBackground;
-
 		}
 
 		// If there's a background brightness flag for this slide,
