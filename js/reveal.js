@@ -1401,7 +1401,7 @@ export default function( revealElement, options ) {
 		progress.update();
 		controls.update();
 		notes.update();
-		backgrounds.update();
+		backgrounds.update(true);
 		backgrounds.updateParallax();
 		slideNumber.update();
 		fragments.update();
