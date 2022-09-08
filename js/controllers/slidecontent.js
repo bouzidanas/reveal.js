@@ -270,7 +270,7 @@ export default class SlideContent {
 	 *
 	 * @param {HTMLElement} element
 	 */
-	startEmbeddedContent( element ) {
+	startEmbeddedContent( element, time ) {
 
 		if( element && !this.Reveal.isSpeakerNotes() ) {
 
@@ -300,6 +300,7 @@ export default class SlideContent {
 
 					// If the media is ready, start playback
 					if( el.readyState > 1 ) {
+						el.currentTime = time;
 						this.startEmbeddedMedia( { target: el } );
 					}
 					// Mobile devices never fire a loaded event so instead
@@ -362,12 +363,20 @@ export default class SlideContent {
 	 * @param {object} event
 	 */
 	startEmbeddedMedia( event ) {
-
+		
 		let isAttachedToDOM = !!closest( event.target, 'html' ),
 			isVisible  		= !!closest( event.target, '.present' );
 
 		if( isAttachedToDOM && isVisible ) {
-			event.target.currentTime = 0;
+			//event.target.currentTime = event.time;
+			//console.log("play called");
+			console.log("----------");
+			console.log("Play time:  " + Date.now() + " | " + event.target.dataset.playState);
+
+			const evt = new CustomEvent('playtriggered', { detail: event.target });
+			window.dispatchEvent(evt);
+			event.target.dataset.playTime = Date.now();
+			console.log(event.target);
 			event.target.play();
 		}
 
@@ -438,6 +447,9 @@ export default class SlideContent {
 			queryAll( element, 'video, audio' ).forEach( el => {
 				if( !el.hasAttribute( 'data-ignore' ) && typeof el.pause === 'function' ) {
 					el.setAttribute('data-paused-by-reveal', '');
+					console.log("Pause time: " + Date.now());
+					console.log(el);
+					el.dataset.pauseTime = Date.now();
 					el.pause();
 				}
 			} );
